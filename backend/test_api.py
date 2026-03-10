@@ -39,43 +39,87 @@ def test_home():
 
 def generate_traffic_data(hour: int, congestion_level: str = "normal"):
     """
-    Generate realistic traffic data.
+    Generate realistic traffic data with all 14 features.
     
     Args:
         hour: Hour of day (0-23)
         congestion_level: "low", "normal", "high", "severe"
     
     Returns:
-        dict: Traffic feature data
+        dict: Traffic feature data with all 14 features
     """
     if congestion_level == "low":
         vehicle_count = random.uniform(20, 40)
-        avg_speed = random.uniform(45, 60)
+        average_speed = random.uniform(45, 60)
         lane_occupancy = random.uniform(0.2, 0.4)
-        queue_length = random.uniform(0, 5)
+        flow_rate = random.uniform(500, 800)
+        waiting_time = random.uniform(0, 10)
+        avg_speed_kmph = random.uniform(50, 70)
+        density_veh_per_km = random.uniform(5, 15)
+        avg_wait_time_s = random.uniform(5, 15)
+        occupancy_pct = random.uniform(10, 25)
+        flow_veh_per_hr = random.uniform(1500, 1800)
+        queue_length_veh = random.uniform(0, 5)
+        avg_accel_ms2 = random.uniform(0.5, 1.0)
+        SRI = random.uniform(-2, 2)
     elif congestion_level == "normal":
         vehicle_count = random.uniform(40, 70)
-        avg_speed = random.uniform(30, 45)
+        average_speed = random.uniform(30, 45)
         lane_occupancy = random.uniform(0.4, 0.6)
-        queue_length = random.uniform(5, 15)
+        flow_rate = random.uniform(800, 1200)
+        waiting_time = random.uniform(10, 30)
+        avg_speed_kmph = random.uniform(35, 50)
+        density_veh_per_km = random.uniform(20, 40)
+        avg_wait_time_s = random.uniform(15, 30)
+        occupancy_pct = random.uniform(30, 50)
+        flow_veh_per_hr = random.uniform(1200, 1600)
+        queue_length_veh = random.uniform(5, 15)
+        avg_accel_ms2 = random.uniform(0.2, 0.8)
+        SRI = random.uniform(0, 3)
     elif congestion_level == "high":
         vehicle_count = random.uniform(70, 90)
-        avg_speed = random.uniform(15, 30)
+        average_speed = random.uniform(15, 30)
         lane_occupancy = random.uniform(0.6, 0.8)
-        queue_length = random.uniform(15, 30)
+        flow_rate = random.uniform(1200, 1500)
+        waiting_time = random.uniform(30, 60)
+        avg_speed_kmph = random.uniform(20, 35)
+        density_veh_per_km = random.uniform(40, 60)
+        avg_wait_time_s = random.uniform(30, 60)
+        occupancy_pct = random.uniform(50, 70)
+        flow_veh_per_hr = random.uniform(800, 1200)
+        queue_length_veh = random.uniform(15, 30)
+        avg_accel_ms2 = random.uniform(-0.5, 0.3)
+        SRI = random.uniform(2, 5)
     else:  # severe
         vehicle_count = random.uniform(90, 120)
-        avg_speed = random.uniform(5, 15)
+        average_speed = random.uniform(5, 15)
         lane_occupancy = random.uniform(0.8, 1.0)
-        queue_length = random.uniform(30, 50)
+        flow_rate = random.uniform(1500, 2000)
+        waiting_time = random.uniform(60, 150)
+        avg_speed_kmph = random.uniform(5, 20)
+        density_veh_per_km = random.uniform(60, 95)
+        avg_wait_time_s = random.uniform(60, 130)
+        occupancy_pct = random.uniform(70, 100)
+        flow_veh_per_hr = random.uniform(500, 800)
+        queue_length_veh = random.uniform(30, 60)
+        avg_accel_ms2 = random.uniform(-1.0, -0.2)
+        SRI = random.uniform(4, 6)
 
     return {
         "vehicle_count": vehicle_count,
-        "avg_speed": avg_speed,
+        "average_speed": average_speed,
         "lane_occupancy": lane_occupancy,
-        "queue_length": queue_length,
+        "flow_rate": flow_rate,
         "time_of_day": hour,
-        "day_of_week": random.randint(0, 6)
+        "waiting_time": waiting_time,
+        "avg_speed_kmph": avg_speed_kmph,
+        "density_veh_per_km": density_veh_per_km,
+        "avg_wait_time_s": avg_wait_time_s,
+        "occupancy_pct": occupancy_pct,
+        "flow_veh_per_hr": flow_veh_per_hr,
+        "queue_length_veh": queue_length_veh,
+        "avg_accel_ms2": avg_accel_ms2,
+        "SRI": SRI
     }
 
 
@@ -136,30 +180,38 @@ def test_single_prediction():
     """Test a single prediction with specific data."""
     print("\n📊 Testing Single Prediction:")
     print("-" * 50)
-    
+
     # Reset for fresh test
     requests.post(f"{BASE_URL}/reset")
-    
-    # Example data from the documentation
+
+    # Example data with all 14 features
     example_data = {
         "vehicle_count": 40,
-        "avg_speed": 25,
+        "average_speed": 25,
         "lane_occupancy": 0.65,
-        "queue_length": 10,
+        "flow_rate": 850,
         "time_of_day": 18,
-        "day_of_week": 3
+        "waiting_time": 15,
+        "avg_speed_kmph": 28,
+        "density_veh_per_km": 35,
+        "avg_wait_time_s": 20,
+        "occupancy_pct": 45,
+        "flow_veh_per_hr": 1250,
+        "queue_length_veh": 10,
+        "avg_accel_ms2": 0.8,
+        "SRI": 2.5
     }
-    
+
     print(f"Sending example data: {json.dumps(example_data, indent=2)}")
-    
+
     response = requests.post(
         f"{BASE_URL}/predict",
         json=example_data
     )
-    
+
     result = response.json()
     print(f"\nResponse:\n{json.dumps(result, indent=2)}")
-    
+
     return response.status_code == 200
 
 

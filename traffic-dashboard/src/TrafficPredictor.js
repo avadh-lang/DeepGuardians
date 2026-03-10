@@ -9,14 +9,20 @@ function TrafficPredictor() {
   const predictTraffic = async () => {
 
     const trafficData = {
-      vehicle_count: Math.random() * 100,
-      average_speed: 20 + Math.random() * 60,
+      vehicle_count: Math.random() * 100 + 20,
+      average_speed: Math.random() * 80 + 5,
       lane_occupancy: Math.random(),
-      flow_rate: 50 + Math.random() * 100,
-      waiting_time: Math.random() * 60,
-      density_veh_per_km: Math.random() * 50,
-      queue_length_veh: Math.random() * 30,
-      avg_accel_ms2: Math.random() * 3
+      flow_rate: Math.random() * 1500 + 500,
+      time_of_day: Math.floor(Math.random() * 24),
+      waiting_time: Math.random() * 200,
+      avg_speed_kmph: Math.random() * 80 + 5,
+      density_veh_per_km: Math.random() * 100,
+      avg_wait_time_s: Math.random() * 150,
+      occupancy_pct: Math.random() * 100,
+      flow_veh_per_hr: Math.random() * 2000 + 500,
+      queue_length_veh: Math.random() * 60,
+      avg_accel_ms2: Math.random() * 2 - 1,
+      SRI: Math.random() * 10 - 2
     };
 
     setLoading(true);

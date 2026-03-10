@@ -34,11 +34,19 @@ app.add_middleware(
 class TrafficInput(BaseModel):
     """Traffic feature input for congestion prediction."""
     vehicle_count: float
-    avg_speed: float
+    average_speed: float
     lane_occupancy: float
-    queue_length: float
+    flow_rate: float
     time_of_day: float
-    day_of_week: float
+    waiting_time: float
+    avg_speed_kmph: float
+    density_veh_per_km: float
+    avg_wait_time_s: float
+    occupancy_pct: float
+    flow_veh_per_hr: float
+    queue_length_veh: float
+    avg_accel_ms2: float
+    SRI: float
 
 
 @app.get("/")
@@ -62,35 +70,59 @@ def predict(data: TrafficInput):
     
     Args:
         vehicle_count: Number of vehicles on road
-        avg_speed: Average vehicle speed (km/h)
+        average_speed: Average vehicle speed (km/h)
         lane_occupancy: Occupancy percentage (0-1)
-        queue_length: Number of vehicles in queue
+        flow_rate: Traffic flow rate (vehicles/minute)
         time_of_day: Hour of day (0-23)
-        day_of_week: Day of week (0-6, 0=Monday)
+        waiting_time: Average waiting time (seconds)
+        avg_speed_kmph: Average speed in km/h
+        density_veh_per_km: Vehicle density per km
+        avg_wait_time_s: Average wait time in seconds
+        occupancy_pct: Occupancy percentage
+        flow_veh_per_hr: Flow rate in vehicles per hour
+        queue_length_veh: Queue length in vehicles
+        avg_accel_ms2: Average acceleration (m/s²)
+        SRI: Speed Reduction Index
     
     Returns:
-        - While collecting: {"status": "collecting_data", "samples_collected": N, "required_points": M}
+        - While collecting: {"status": "collecting_data", "samples_collected": N, "required_points": 10}
         - With prediction: {"status": "success", "congestion_level": "High", "confidence": 2.1}
     
     Example request:
         {
             "vehicle_count": 40,
-            "avg_speed": 25,
+            "average_speed": 25,
             "lane_occupancy": 0.65,
-            "queue_length": 10,
+            "flow_rate": 850,
             "time_of_day": 18,
-            "day_of_week": 3
+            "waiting_time": 15,
+            "avg_speed_kmph": 28,
+            "density_veh_per_km": 35,
+            "avg_wait_time_s": 20,
+            "occupancy_pct": 45,
+            "flow_veh_per_hr": 1250,
+            "queue_length_veh": 10,
+            "avg_accel_ms2": 0.8,
+            "SRI": 2.5
         }
     """
     try:
-        # Extract features as list
+        # Extract features as list in the correct order (matching training data)
         features = [
             data.vehicle_count,
-            data.avg_speed,
+            data.average_speed,
             data.lane_occupancy,
-            data.queue_length,
+            data.flow_rate,
             data.time_of_day,
-            data.day_of_week
+            data.waiting_time,
+            data.avg_speed_kmph,
+            data.density_veh_per_km,
+            data.avg_wait_time_s,
+            data.occupancy_pct,
+            data.flow_veh_per_hr,
+            data.queue_length_veh,
+            data.avg_accel_ms2,
+            data.SRI
         ]
 
         # Get prediction
