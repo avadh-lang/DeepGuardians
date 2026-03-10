@@ -1,60 +1,84 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import numpy as np
-from tensorflow.keras.models import load_model
+"""
+FastAPI backend for real-time traffic congestion prediction
+Run: uvicorn backend.app:app --reload
+"""
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from src.live_predict import predict_live, reset_buffer
 
-from src.preprocess import load_and_preprocess
-from src.sequence import create_sequences
+# Initialize FastAPI app
+app = FastAPI(title="Traffic Congestion Predictor")
 
-app = Flask(__name__)
-CORS(app)   # <-- ADD THIS
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-model = load_model("models/lstm_model.h5", compile=False)
 
-X, y, scaler, encoder = load_and_preprocess("dataset/traffic_dataset.csv")
-X_seq, y_seq = create_sequences(X, y)
+# Pydantic model for request validation
+class TrafficData(BaseModel):
+    vehicle_count: float
+    average_speed: float
+    lane_occupancy: float
+    flow_rate: float
+    waiting_time: float
+    density_veh_per_km: float
+    queue_length_veh: float
+    avg_accel_ms2: float
 
 
-@app.route("/predict", methods=["POST"])
-def predict():
-
+@app.post("/predict")
+def predict(data: TrafficData):
+    """
+    Predict traffic congestion level from live traffic data.
+    
+    Requires consecutive calls to build up a sequence window (default: 10 samples).
+    """
     try:
-        data = request.get_json()
-
-        print("Received data:", data)
-
-        features = np.array([
-            data["vehicle_count"],
-            data["average_speed"],
-            data["lane_occupancy"],
-            data["flow_rate"],
-            data["waiting_time"],
-            data["density_veh_per_km"],
-            data["queue_length_veh"],
-            data["avg_accel_ms2"]
-        ])
-
-        features = features.reshape(1, -1)
-
-        features_scaled = scaler.transform(features)
-
-        sequence = np.repeat(features_scaled, 10, axis=0)
-        sequence = sequence.reshape(1, 10, features_scaled.shape[1])
-
-        prediction = model.predict(sequence)
-
-        predicted_class = round(prediction[0][0])
-
-        label = encoder.inverse_transform([predicted_class])[0]
-
-        return jsonify({
-            "congestion_level": label
-        })
-
+        print(f"Received data: {data}")
+        
+        # Extract features in order
+        features = [
+            data.vehicle_count,
+            data.average_speed,
+            data.lane_occupancy,
+            data.flow_rate,
+            data.waiting_time,
+            data.density_veh_per_km,
+            data.queue_length_veh,
+            data.avg_accel_ms2
+        ]
+        
+        # Get prediction
+        result = predict_live(features)
+        
+        print(f"Prediction result: {result}")
+        
+        return result
+        
     except Exception as e:
-        print("ERROR:", str(e))
-        return jsonify({"error": str(e)})
+        print(f"ERROR: {str(e)}")
+        return {"error": str(e), "status": "error"}
+
+
+@app.post("/reset")
+def reset():
+    """Reset the prediction buffer for a new session."""
+    reset_buffer()
+    return {"status": "buffer_reset"}
+
+
+@app.get("/health")
+def health():
+    """Health check endpoint."""
+    return {"status": "healthy"}
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)

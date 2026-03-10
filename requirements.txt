@@ -3,3 +3,7 @@ numpy
 scikit-learn
 tensorflow
 matplotlib
+fastapi
+uvicorn
+joblib
+python-multipart
