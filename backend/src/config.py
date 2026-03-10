@@ -1,0 +1,4 @@
+TIME_STEPS = 10
+TEST_SIZE = 0.2
+RANDOM_STATE = 42
+DATA_PATH = "traffic_dataset.csv"
