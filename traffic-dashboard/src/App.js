@@ -1,8 +1,9 @@
+import "./App.css";
 import TrafficPredictor from "./TrafficPredictor";
 
 function App() {
   return (
-    <div>
+    <div className="App">
       <TrafficPredictor />
     </div>
   );
