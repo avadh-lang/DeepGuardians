@@ -52,7 +52,7 @@ The module performs the following tasks:
 	•	preparation of time-series sequences for the model
 	•	training and testing of the LSTM congestion prediction model
 
-poorva-traffic-model branch
+traffic-model branch
 
 This branch contains traffic modeling experiments and feature analysis related to traffic prediction. It explores modeling approaches and supports the development of the congestion prediction pipeline.
 
