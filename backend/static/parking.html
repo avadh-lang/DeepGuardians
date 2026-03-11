@@ -407,22 +407,25 @@
         }
 
         .optimal-times {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 12px;
-            flex-wrap: wrap;
             margin-top: 18px;
         }
 
         .time-chip {
-            padding: 12px 24px;
-            border-radius: 24px;
-            background: linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%);
-            color: #4c51bf;
+            padding: 14px 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: #0c4a6e;
             font-weight: 600;
             font-size: 0.95em;
             transition: all 0.3s;
-            box-shadow: 0 2px 6px rgba(76, 81, 191, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             cursor: default;
+            text-align: center;
+            position: relative;
+            border: 2px solid transparent;
         }
 
         .time-chip:hover {
@@ -446,15 +449,18 @@
             animation: pulse-border 2s infinite;
         }
 
-        .time-chip.current::after {
-            content: '← NOW';
+        .time-chip.current::before {
+            content: '⏰';
             position: absolute;
-            right: -45px;
+            left: 8px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 0.75em;
+            font-size: 1.1em;
+        }
+
+        .time-chip.current {
+            padding-left: 36px;
             font-weight: 800;
-            color: var(--brand);
         }
 
         @keyframes pulse-border {
@@ -465,14 +471,21 @@
         .time-chip.peak-hour {
             border: 2px solid var(--danger);
             position: relative;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
         }
 
-        .time-chip.peak-hour::before {
-            content: '⚠️';
-            position: absolute;
-            left: -8px;
-            top: -8px;
-            font-size: 1.2em;
+        .time-chip.critical-time {
+            background: linear-gradient(135deg, #fecaca 0%, #fee2e2 100%);
+            color: #991b1b;
+            border: 2px solid var(--danger);
+            font-weight: 700;
+        }
+
+        .time-chip.limited-time {
+            background: linear-gradient(135deg, #fed7aa 0%, #ffedd5 100%);
+            color: #9a3412;
+            border: 2px solid var(--warning);
+            font-weight: 600;
         }
 
         .error {
@@ -750,7 +763,8 @@
             .parking-name { font-size: 1.2em; }
             .parking-details { grid-template-columns: 1fr; }
             .action-buttons { flex-direction: column; }
-            .time-chip.current::after { display: none; }
+            .optimal-times { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .time-chip { font-size: 0.85em; padding: 12px 16px; }
         }
 
         .live-indicator {
@@ -1211,7 +1225,7 @@
                             <button class="btn-action" onclick="showDurationCalculator('${parking.parking_id}', ${parking.hourly_rate})">
                                 💰 Calculate Cost
                             </button>
-                            <button class="btn-action" onclick="getDirections(${parking.lat}, ${parking.lon}, '${parking.name}')">
+                            <button class="btn-action" onclick="getDirections(${parking.latitude}, ${parking.longitude}, '${parking.name}')">
                                 🗺️ Directions
                             </button>
                             <button class="btn-action" onclick="saveFavorite('${parking.parking_id}', '${parking.name}')">
@@ -1254,17 +1268,24 @@
                 const sortedTimes = [...data.optimal_times].sort((a, b) => a.hour - b.hour);
                 
                 let html = `
-                    <div style="background:#f0f9ff;padding:20px;border-radius:10px;margin-top:15px;border-left:4px solid #0369a1;">
-                        <h3 style="color:#0369a1;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
-                            🕐 Hour-by-Hour Availability Forecast
-                        </h3>
-                        <p style="color:#64748b;font-size:0.9em;margin-bottom:16px;line-height:1.6;">
-                            AI predictions for <strong>${parkingName}</strong> throughout the day (sorted by time). 
-                            <br>🟢 <strong>ABUNDANT</strong> = 0-25% full (plenty of space) • 
-                            🟡 <strong>AVAILABLE</strong> = 25-50% full (moderate) • 
-                            🟠 <strong>LIMITED</strong> = 50-75% full (busy) • 
-                            🔴 <strong>CRITICAL</strong> = 75-100% full (very busy, arrive early!)
+                    <div style="background:linear-gradient(to bottom, #f0f9ff 0%, #ffffff 100%);padding:24px;border-radius:12px;margin-top:20px;border:2px solid #bae6fd;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                            <h3 style="color:#0369a1;font-size:1.3em;font-weight:700;display:flex;align-items:center;gap:10px;margin:0;">
+                                🕐 Hour-by-Hour Availability Forecast
+                            </h3>
+                            <span style="background:#dcfce7;color:#065f46;padding:6px 14px;border-radius:20px;font-size:0.85em;font-weight:700;">TODAY</span>
+                        </div>
+                        <p style="color:#64748b;font-size:0.9em;margin-bottom:20px;line-height:1.6;">
+                            AI predictions for <strong style="color:#0369a1;">${parkingName}</strong> throughout the day.
                         </p>
+                        <div style="background:#f1f5f9;padding:12px 16px;border-radius:8px;margin-bottom:20px;border-left:4px solid #0ea5e9;">
+                            <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:0.85em;color:#475569;">
+                                <span><strong style="color:#059669;">🟢 ABUNDANT:</strong> 0-25% full</span>
+                                <span><strong style="color:#d97706;">🟡 AVAILABLE:</strong> 25-50% full</span>
+                                <span><strong style="color:#ea580c;">🟠 LIMITED:</strong> 50-75% full</span>
+                                <span><strong style="color:#dc2626;">🔴 CRITICAL:</strong> 75-100% full</span>
+                            </div>
+                        </div>
                         <div class="optimal-times">
                 `;
 
@@ -1277,24 +1298,38 @@
                     const emoji = time.availability === 'abundant' ? '🟢' : 
                                  time.availability === 'available' ? '🟡' : 
                                  time.availability === 'limited' ? '🟠' : '🔴';
-                    const isGood = time.availability === 'abundant' || time.availability === 'available';
+                    const isGood = time.availability === 'abundant';
                     const isCurrent = time.hour === currentHour;
-                    const isPeak = peakHours.includes(time.hour) && !isGood;
+                    const isPeak = peakHours.includes(time.hour);
                     const classes = [];
-                    if (isCurrent) classes.push('current');
-                    else if (isGood && index < 3) classes.push('best');
-                    if (isPeak) classes.push('peak-hour');
                     
-                    html += `<div class="time-chip ${classes.join(' ')}" style="${!isGood && !isCurrent ? 'opacity:0.8;' : ''}">${emoji} ${time.time} - ${availabilityLabel}</div>`;
+                    if (isCurrent) {
+                        classes.push('current');
+                    } else if (time.availability === 'critical') {
+                        classes.push('critical-time');
+                        if (isPeak) classes.push('peak-hour');
+                    } else if (time.availability === 'limited') {
+                        classes.push('limited-time');
+                    } else if (isGood && index < 3) {
+                        classes.push('best');
+                    }
+                    
+                    const label = isCurrent ? `${time.time} - ${availabilityLabel}` : `${emoji} ${time.time}<br><small style="font-size:0.85em;opacity:0.9;">${availabilityLabel}</small>`;
+                    html += `<div class="time-chip ${classes.join(' ')}">${label}</div>`;
                 });
 
+                html += `</div>`;
+                
                 if (hasPeakHours) {
-                    html += `</div><div class="peak-warning">
-                        ⚠️ <strong>Peak Hours Alert:</strong> Rush hour traffic may cause heavy congestion. Consider arriving outside of 7-9 AM or 5-7 PM.
+                    html += `<div style="background:linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);color:#991b1b;padding:16px 20px;border-radius:10px;margin-top:16px;border-left:4px solid #dc2626;display:flex;align-items:start;gap:12px;box-shadow:0 4px 12px rgba(220, 38, 38, 0.2);">
+                        <div style="font-size:1.5em;line-height:1;">⚠️</div>
+                        <div>
+                            <strong style="font-size:1.05em;display:block;margin-bottom:4px;">Peak Hours Alert</strong>
+                            <span style="font-size:0.95em;">Rush hour traffic may cause heavy congestion. Consider arriving outside of <strong>7-9 AM</strong> or <strong>5-7 PM</strong> for easier access.</span>
+                        </div>
                     </div>`;
-                } else {
-                    html += `</div>`;
                 }
+                
                 html += `</div>`;
 
                 html += `</div></div>`;
