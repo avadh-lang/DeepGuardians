@@ -13,12 +13,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from src.live_congestion_predictor import predict_congestion_live, reset_buffer
 
+# Import parking router
+try:
+    from parking_api import router as parking_router
+    parking_available = True
+except:
+    parking_available = False
+    print("⚠️ Parking module not available")
+
 # Initialize FastAPI app
 app = FastAPI(
-    title="Traffic Congestion Prediction API",
-    description="Real-time LSTM-based traffic congestion predictor",
-    version="1.0.0"
+    title="DeepGuardians - Traffic & Parking Prediction API",
+    description="Real-time LSTM-based traffic congestion and parking availability predictor",
+    version="2.0.0"
 )
+
+# Include parking router if available
+if parking_available:
+    app.include_router(parking_router)
 
 # Enable CORS for all origins
 app.add_middleware(
