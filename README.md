@@ -61,7 +61,7 @@ parking-module branch
 This branch contains the parking intelligence module.
 It focuses on analyzing parking availability and integrating parking information into mobility planning and routing decisions.
 
-departure-time-module branch (planned)
+departure
 
 This branch will implement the departure time recommendation module.
 The goal of this module is to determine optimal travel start times based on predicted congestion patterns from the LSTM model.
