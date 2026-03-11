@@ -11,6 +11,8 @@ import sys
 sys.path.append('src/parking')
 
 from src.parking.parking_predict import get_predictor
+from src.parking.smart_departure import get_departure_planner
+from src.parking.user_preferences import get_user_preferences
 
 
 # Create router
@@ -44,6 +46,37 @@ class OptimalTimeRequest(BaseModel):
     parking_id: str
     date: str  # YYYY-MM-DD format
     time_range_hours: Optional[int] = 24
+
+
+class SmartDepartureRequest(BaseModel):
+    origin_lat: float
+    origin_lon: float
+    destination_lat: float
+    destination_lon: float
+    arrival_time: str
+    parking_radius_km: Optional[float] = 2.0
+
+
+class TripRecordRequest(BaseModel):
+    user_id: str
+    origin_lat: float
+    origin_lon: float
+    destination_lat: float
+    destination_lon: float
+    destination_name: str
+    departure_time: str
+    arrival_time: str
+    parking_id: Optional[str] = None
+    parking_name: Optional[str] = None
+    rating: Optional[int] = None
+
+
+class PersonalizedParkingRequest(BaseModel):
+    user_id: str
+    destination_lat: float
+    destination_lon: float
+    arrival_datetime: Optional[str] = None
+    radius_km: Optional[float] = 2.0
 
 
 # Endpoints
@@ -320,5 +353,83 @@ async def get_parking_location_details(parking_id: str):
             **location
         }
     
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/smart-departure")
+async def recommend_smart_departure(request: SmartDepartureRequest):
+    """Recommend optimal departure time considering traffic and parking"""
+    try:
+        planner = get_departure_planner()
+        arrival_dt = datetime.fromisoformat(request.arrival_time)
+        result = planner.recommend_departure_time(
+            request.origin_lat, request.origin_lon,
+            request.destination_lat, request.destination_lon,
+            arrival_dt, request.parking_radius_km
+        )
+        return {"status": "success", **result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/user/record-trip")
+async def record_user_trip(request: TripRecordRequest):
+    """Record a completed trip for personalized learning"""
+    try:
+        user = get_user_preferences(request.user_id)
+        departure_dt = datetime.fromisoformat(request.departure_time)
+        arrival_dt = datetime.fromisoformat(request.arrival_time)
+        user.record_trip(
+            request.origin_lat, request.origin_lon,
+            request.destination_lat, request.destination_lon,
+            request.destination_name, departure_dt, arrival_dt,
+            request.parking_id, request.parking_name, request.rating
+        )
+        return {
+            "status": "success",
+            "message": "Trip recorded successfully",
+            "total_trips": user.data['statistics']['total_trips']
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/user/{user_id}/favorites")
+async def get_user_favorites(user_id: str):
+    """Get user's favorite destinations and parking locations"""
+    try:
+        user = get_user_preferences(user_id)
+        return {
+            "status": "success",
+            "user_id": user_id,
+            "favorite_destinations": user.get_favorite_destinations(10),
+            "favorite_parking": user.get_favorite_parking(10),
+            "statistics": user.get_user_statistics()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/user/personalized-parking")
+async def get_personalized_parking(request: PersonalizedParkingRequest):
+    """Get parking recommendations personalized based on user history"""
+    try:
+        user = get_user_preferences(request.user_id)
+        pred = get_predictor()
+        arrival_dt = datetime.fromisoformat(request.arrival_datetime) if request.arrival_datetime else datetime.now() + timedelta(minutes=30)
+        
+        nearby_parking = pred.find_nearby_parking(
+            request.destination_lat, request.destination_lon,
+            request.radius_km, arrival_dt
+        )
+        personalized_parking = user.get_personalized_parking_suggestions(nearby_parking)
+        
+        return {
+            "status": "success",
+            "user_id": request.user_id,
+            "personalized_parking": personalized_parking[:5],
+            "preferences_applied": user.data['parking_preferences']
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

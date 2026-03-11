@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🅿️ DeepGuardians - Parking Intelligence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .destinations {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .destination-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: left;
+        }
+
+        .destination-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .destination-btn .name {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .destination-btn .type {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .results {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .parking-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.2s;
+        }
+
+        .parking-card:hover {
+            transform: translateX(5px);
+        }
+
+        .parking-card.best {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .parking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .parking-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .availability-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .abundant { background: #10b981; color: white; }
+        .available { background: #f59e0b; color: white; }
+        .limited { background: #ef4444; color: white; }
+        .critical { background: #991b1b; color: white; }
+
+        .parking-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #6b7280;
+        }
+
+        .loader {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .optimal-times {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .time-chip {
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: #e0e7ff;
+            color: #4c51bf;
+            font-weight: 500;
+        }
+
+        .time-chip.best {
+            background: #10b981;
+            color: white;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .custom-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🅿️ DeepGuardians Parking Intelligence</h1>
+            <p>AI-Powered Parking Availability Prediction for Mumbai</p>
+        </div>
+
+        <div class="main-card">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('parking')">🅿️ Find Parking</button>
+                <button class="tab" onclick="switchTab('smart')">🚗 Smart Departure</button>
+                <button class="tab" onclick="switchTab('personal')">👤 My Profile</button>
+            </div>
+
+            <!-- Tab 1: Find Parking -->
+            <div id="parking-tab" class="tab-content active">
+                <!-- Popular Destinations -->
+                <div class="section">
+                    <div class="section-title">
+                        <span>📍</span> Popular Destinations
+                    </div>
+                    <div class="destinations">
+                    <button class="destination-btn" onclick="findParking(18.9220, 72.8347, 'Gateway of India')">
+                        <div class="name">Gateway of India</div>
+                        <div class="type">Tourist Attraction</div>
+                    </button>
+                    <button class="destination-btn" onclick="findParking(19.0616, 72.8689, 'BKC Corporate')">
+                        <div class="name">BKC Business District</div>
+                        <div class="type">Commercial Area</div>
+                    </button>
+                    <button class="destination-btn" onclick="findParking(19.0626, 72.8327, 'Phoenix Mall')">
+                        <div class="name">Phoenix Palladium Mall</div>
+                        <div class="type">Shopping Center</div>
+                    </button>
+                    <button class="destination-btn" onclick="findParking(18.9398, 72.8355, 'CST Station')">
+                        <div class="name">CST Railway Station</div>
+                        <div class="type">Transit Hub</div>
+                    </button>
+                    <button class="destination-btn" onclick="findParking(19.0896, 72.8656, 'Mumbai Airport')">
+                        <div class="name">Mumbai Airport T1</div>
+                        <div class="type">Airport</div>
+                    </button>
+                    <button class="destination-btn" onclick="findParking(19.1136, 72.8697, 'Andheri IT Park')">
+                        <div class="name">SEEPZ IT Park</div>
+                        <div class="type">Tech Hub</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Custom Location -->
+            <div class="section">
+                <div class="section-title">
+                    <span>🎯</span> Search Any Location
+                </div>
+                <div class="custom-form">
+                    <div class="form-group">
+                        <label>Location Name (City, Place, Address)</label>
+                        <input type="text" id="locationName" placeholder="e.g., Colaba, Marine Drive, Andheri Station" style="font-size:1.1em;">
+                    </div>
+                    <div class="form-group">
+                        <label>Search Radius (km)</label>
+                        <input type="number" id="radius" value="2" min="0.5" max="10" step="0.5">
+                    </div>
+                    <button class="submit-btn" onclick="searchLocation()">🔍 Find Parking Near This Location</button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" style="display:none;">
+                <div class="section">
+                    <div class="section-title">
+                        <span>🅿️</span> <span id="resultsTitle">Parking Options</span>
+                    </div>
+                    <div id="parkingResults"></div>
+                </div>
+            </div>
+            </div>
+
+            <!-- Tab 2: Smart Departure -->
+            <div id="smart-tab" class="tab-content">
+                <div class="section">
+                    <div class="section-title">
+                        <span>🚗</span> Smart Departure Planning
+                    </div>
+                    <p style="color:#6b7280;margin-bottom:20px;">
+                        Get optimal departure time recommendations considering traffic and parking availability
+                    </p>
+
+                    <div class="custom-form">
+                        <div class="form-group">
+                            <label>📍 Origin Location</label>
+                            <input type="text" id="smartOrigin" placeholder="e.g., Andheri, Bandra, Worli">
+                        </div>
+                        <div class="form-group">
+                            <label>🎯 Destination</label>
+                            <input type="text" id="smartDest" placeholder="e.g., BKC, Gateway of India">
+                        </div>
+                        <div class="form-group">
+                            <label>⏰ Desired Arrival Time</label>
+                            <input type="datetime-local" id="arrivalTime">
+                        </div>
+                        <button class="submit-btn" onclick="getSmartDeparture()">🚀 Get Departure Recommendation</button>
+                    </div>
+
+                    <div id="smartResults" style="margin-top:20px;"></div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Personal Profile -->
+            <div id="personal-tab" class="tab-content">
+                <div class="section">
+                    <div class="section-title">
+                        <span>👤</span> My Profile & Favorites
+                    </div>
+
+                    <div class="custom-form" style="margin-bottom:20px;">
+                        <div class="form-group">
+                            <label>User ID</label>
+                            <input type="text" id="userId" placeholder="Enter your user ID" value="demo_user">
+                        </div>
+                        <button class="submit-btn" onclick="loadUserProfile()">📊 Load My Profile</button>
+                    </div>
+
+                    <div id="profileResults"></div>
+
+                    <div style="margin-top:30px;">
+                        <h3 style="color:#667eea;margin-bottom:15px;">🎯 Get Personalized Parking</h3>
+                        <div class="custom-form">
+                            <div class="form-group">
+                                <label>Destination</label>
+                                <input type="text" id="personalDest" placeholder="e.g., BKC, Colaba">
+                            </div>
+                            <button class="submit-btn" onclick="getPersonalizedParking()">✨ Get My Recommendations</button>
+                        </div>
+                        <div id="personalResults" style="margin-top:20px;"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000';
+        let currentUserId = 'demo_user';
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        async function findParking(lat, lon, locationName) {
+            showLoader();
+            
+            try {
+                const response = await fetch(`${API_BASE}/parking/nearby`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        destination_lat: lat,
+                        destination_lon: lon,
+                        radius_km: 2.0
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch parking data');
+                }
+
+                const data = await response.json();
+                displayResults(data, locationName);
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function findCustomParking() {
+            const lat = parseFloat(document.getElementById('customLat').value);
+            const lon = parseFloat(document.getElementById('customLon').value);
+            const radius = parseFloat(document.getElementById('radius').value);
+
+            if (isNaN(lat) || isNaN(lon)) {
+                showError('Please enter valid latitude and longitude');
+                return;
+            }
+
+            showLoader();
+            
+            try {
+                const response = await fetch(`${API_BASE}/parking/nearby`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        destination_lat: lat,
+                        destination_lon: lon,
+                        radius_km: radius
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch parking data');
+                }
+
+                const data = await response.json();
+                displayResults(data, 'Custom Location');
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function searchLocation() {
+            const locationName = document.getElementById('locationName').value.trim();
+            const radius = parseFloat(document.getElementById('radius').value);
+
+            if (!locationName) {
+                showError('Please enter a location name');
+                return;
+            }
+
+            showLoader();
+            document.getElementById('parkingResults').innerHTML = `
+                <div class="loader">
+                    <div class="spinner"></div>
+                    <p style="margin-top:20px;color:#6b7280;">🗺️ Finding location: "${locationName}"...</p>
+                </div>
+            `;
+
+            try {
+                // Use Nominatim (OpenStreetMap) geocoding API with Mumbai bias
+                const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName + ', Mumbai, India')}&limit=1`;
+                
+                const geoResponse = await fetch(geocodeUrl, {
+                    headers: {
+                        'User-Agent': 'DeepGuardians Parking App'
+                    }
+                });
+
+                if (!geoResponse.ok) {
+                    throw new Error('Failed to geocode location');
+                }
+
+                const geoData = await geoResponse.json();
+
+                if (geoData.length === 0) {
+                    throw new Error(`Location "${locationName}" not found. Try: "Colaba", "Andheri", "BKC", "CST Station"`);
+                }
+
+                const lat = parseFloat(geoData[0].lat);
+                const lon = parseFloat(geoData[0].lon);
+                const foundName = geoData[0].display_name.split(',')[0];
+
+                // Now find parking near this location
+                const response = await fetch(`${API_BASE}/parking/nearby`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        destination_lat: lat,
+                        destination_lon: lon,
+                        radius_km: radius
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch parking data');
+                }
+
+                const data = await response.json();
+                displayResults(data, foundName || locationName);
+            } catch (error) {
+                showError(error.message + ' - Make sure the API server is running at http://127.0.0.1:8000');
+            }
+        }
+
+        function displayResults(data, locationName) {
+            const resultsDiv = document.getElementById('results');
+            const resultsTitle = document.getElementById('resultsTitle');
+            const parkingResults = document.getElementById('parkingResults');
+
+            resultsTitle.textContent = `Parking Near ${locationName}`;
+            
+            if (data.parking_options.length === 0) {
+                parkingResults.innerHTML = '<p style="text-align:center;color:#6b7280;">No parking found within the specified radius.</p>';
+                resultsDiv.style.display = 'block';
+                return;
+            }
+
+            let html = `
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value">${data.parking_options.length}</div>
+                        <div class="stat-label">Options Found</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${data.radius_km} km</div>
+                        <div class="stat-label">Search Radius</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${data.parking_options.filter(p => p.availability === 'abundant' || p.availability === 'available').length}</div>
+                        <div class="stat-label">Available Now</div>
+                    </div>
+                </div>
+            `;
+
+            data.parking_options.forEach((parking, index) => {
+                const isBest = index === 0;
+                html += `
+                    <div class="parking-card ${isBest ? 'best' : ''}">
+                        ${isBest ? '<div style="color:#10b981;font-weight:bold;margin-bottom:10px;">⭐ RECOMMENDED</div>' : ''}
+                        <div class="parking-header">
+                            <div>
+                                <div class="parking-name">${parking.name}</div>
+                                <div style="color:#6b7280;margin-top:5px;">${parking.location_type.charAt(0).toUpperCase() + parking.location_type.slice(1)}</div>
+                            </div>
+                            <span class="availability-badge ${parking.availability}">${parking.availability.toUpperCase()}</span>
+                        </div>
+                        <div class="parking-details">
+                            <div class="detail-item">
+                                📍 ${parking.distance_km} km away
+                            </div>
+                            <div class="detail-item">
+                                🚗 ${parking.capacity} spots
+                            </div>
+                            <div class="detail-item">
+                                💰 ₹${parking.hourly_rate}/hour
+                            </div>
+                            <div class="detail-item">
+                                ✅ ${Math.round(parking.confidence * 100)}% confident
+                            </div>
+                        </div>
+                        <div style="margin-top:15px;">
+                            <button class="submit-btn" style="padding:10px 20px;font-size:0.9em;" onclick="showOptimalTimes('${parking.parking_id}', '${parking.name}')">
+                                📊 View Hourly Predictions
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            parkingResults.innerHTML = html;
+            resultsDiv.style.display = 'block';
+        }
+
+        async function showOptimalTimes(parkingId, parkingName) {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const response = await fetch(`${API_BASE}/parking/optimal-time`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        parking_id: parkingId,
+                        date: today,
+                        time_range_hours: 24
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch optimal times');
+                }
+
+                const data = await response.json();
+                
+                let html = `
+                    <div style="background:#f0f9ff;padding:20px;border-radius:10px;margin-top:15px;">
+                        <h3 style="color:#0369a1;margin-bottom:15px;">🕐 Predicted Availability by Hour</h3>
+                        <p style="color:#64748b;font-size:0.9em;margin-bottom:12px;">These are predictions for different arrival times today</p>
+                        <div class="optimal-times">
+                `;
+
+                data.optimal_times.slice(0, 10).forEach((time, index) => {
+                    const availabilityLabel = time.availability.toUpperCase();
+                    const emoji = time.availability === 'abundant' ? '🟢' : 
+                                 time.availability === 'available' ? '🟡' : 
+                                 time.availability === 'limited' ? '🟠' : '🔴';
+                    html += `<div class="time-chip ${index === 0 ? 'best' : ''}">${emoji} ${time.time} - ${availabilityLabel}</div>`;
+                });
+
+                html += `</div></div>`;
+                
+                // Insert after the parking card
+                const cards = document.querySelectorAll('.parking-card');
+                cards.forEach(card => {
+                    if (card.innerHTML.includes(parkingName)) {
+                        const existing = card.querySelector('.optimal-times-container');
+                        if (existing) {
+                            existing.remove();
+                        }
+                        card.insertAdjacentHTML('beforeend', html);
+                    }
+                });
+
+            } catch (error) {
+                showError('Failed to fetch optimal times: ' + error.message);
+            }
+        }
+
+        function showLoader() {
+            const resultsDiv = document.getElementById('results');
+            const parkingResults = document.getElementById('parkingResults');
+            
+            parkingResults.innerHTML = `
+                <div class="loader">
+                    <div class="spinner"></div>
+                    <p style="margin-top:20px;color:#6b7280;">Finding best parking options...</p>
+                </div>
+            `;
+            resultsDiv.style.display = 'block';
+        }
+
+        function showError(message) {
+            const resultsDiv = document.getElementById('results');
+            const parkingResults = document.getElementById('parkingResults');
+            
+            parkingResults.innerHTML = `
+                <div class="error">
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+            resultsDiv.style.display = 'block';
+        }
+
+        // Auto-load example on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                findParking(18.9220, 72.8347, 'Gateway of India');
+            }, 500);
+            
+            // Set default arrival time to 2 hours from now
+            const now = new Date();
+            now.setHours(now.getHours() + 2);
+            document.getElementById('arrivalTime').value = now.toISOString().slice(0, 16);
+        });
+
+        // Smart Departure Planning
+        async function getSmartDeparture() {
+            const origin = document.getElementById('smartOrigin').value;
+            const dest = document.getElementById('smartDest').value;
+            const arrivalTime = document.getElementById('arrivalTime').value;
+
+            if (!origin || !dest || !arrivalTime) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            const smartResults = document.getElementById('smartResults');
+            smartResults.innerHTML = '<div class="loader"><div class="spinner"></div><p>Finding optimal departure time...</p></div>';
+
+            try {
+                // Geocode locations
+                const originCoords = await geocodeLocation(origin);
+                const destCoords = await geocodeLocation(dest);
+
+                const response = await fetch(`${API_BASE}/parking/smart-departure`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        origin_lat: originCoords.lat,
+                        origin_lon: originCoords.lon,
+                        destination_lat: destCoords.lat,
+                        destination_lon: destCoords.lon,
+                        arrival_time: arrivalTime,
+                        parking_radius_km: 2.0
+                    })
+                });
+
+                const data = await response.json();
+                const rec = data.recommended;
+                
+                let html = `
+                    <div style="background:#ecfdf5;padding:25px;border-radius:15px;border:2px solid #10b981;">
+                        <h3 style="color:#10b981;margin-bottom:15px;">🌟 RECOMMENDED DEPARTURE TIME</h3>
+                        <div style="font-size:2em;font-weight:bold;color:#047857;margin-bottom:10px;">
+                            ${new Date(rec.departure_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}
+                        </div>
+                        <div style="color:#065f46;margin-bottom:15px;">
+                            ${rec.reason}
+                        </div>
+                        <div class="stats">
+                            <div class="stat-card">
+                                <div class="stat-value">${rec.travel_time_minutes} min</div>
+                                <div class="stat-label">Travel Time</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${rec.traffic_level}</div>
+                                <div class="stat-label">Traffic</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${rec.parking_availability_score}/100</div>
+                                <div class="stat-label">Parking Score</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${rec.overall_score}/100</div>
+                                <div class="stat-label">Overall Score</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:20px;">
+                        <h4 style="color:#667eea;margin-bottom:10px;">📊 Alternative Departure Times</h4>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
+                `;
+
+                data.scenarios.slice(1, 5).forEach(scenario => {
+                    html += `
+                        <div style="background:#f3f4f6;padding:15px;border-radius:10px;">
+                            <div style="font-weight:bold;color:#374151;margin-bottom:5px;">
+                                ${new Date(scenario.departure_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}
+                            </div>
+                            <div style="font-size:0.9em;color:#6b7280;">
+                                Score: ${scenario.overall_score}/100<br>
+                                ${scenario.traffic_level} traffic<br>
+                                ${scenario.recommendation}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+                smartResults.innerHTML = html;
+
+            } catch (error) {
+                smartResults.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // User Profile Functions
+        async function loadUserProfile() {
+            currentUserId = document.getElementById('userId').value;
+            const profileResults = document.getElementById('profileResults');
+            
+            profileResults.innerHTML = '<div class="loader"><div class="spinner"></div><p>Loading profile...</p></div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/parking/user/${currentUserId}/favorites`);
+                const data = await response.json();
+
+                let html = `
+                    <div style="background:#f9fafb;padding:20px;border-radius:15px;">
+                        <h3 style="color:#667eea;margin-bottom:15px;">📊 Your Statistics</h3>
+                        <div class="stats">
+                            <div class="stat-card">
+                                <div class="stat-value">${data.statistics.total_trips}</div>
+                                <div class="stat-label">Total Trips</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${data.favorite_destinations.length}</div>
+                                <div class="stat-label">Favorite Places</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${data.favorite_parking.length}</div>
+                                <div class="stat-label">Favorite Parking</div>
+                            </div>
+                        </div>
+
+                        <h4 style="color:#667eea;margin:20px 0 10px;">⭐ Favorite Destinations</h4>
+                        <div style="display:grid;gap:10px;">
+                `;
+
+                data.favorite_destinations.forEach(dest => {
+                    html += `
+                        <div style="background:white;padding:15px;border-radius:10px;display:flex;justify-content:space-between;">
+                            <div>
+                                <div style="font-weight:bold;">${dest.name}</div>
+                                <div style="font-size:0.9em;color:#6b7280;">Visited ${dest.visits} times</div>
+                            </div>
+                            <div style="color:#10b981;font-weight:bold;">${dest.visits} visits</div>
+                        </div>
+                    `;
+                });
+
+                html += `</div><h4 style="color:#667eea;margin:20px 0 10px;">🅿️ Favorite Parking</h4><div style="display:grid;gap:10px;">`;
+
+                data.favorite_parking.forEach(park => {
+                    html += `
+                        <div style="background:white;padding:15px;border-radius:10px;display:flex;justify-content:space-between;">
+                            <div>
+                                <div style="font-weight:bold;">${park.name}</div>
+                                <div style="font-size:0.9em;color:#6b7280;">Used ${park.uses} times</div>
+                            </div>
+                            <div style="color:#f59e0b;font-weight:bold;">${park.average_rating ? park.average_rating + '⭐' : 'Not rated'}</div>
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+                profileResults.innerHTML = html;
+
+            } catch (error) {
+                profileResults.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function getPersonalizedParking() {
+            const dest = document.getElementById('personalDest').value;
+            if (!dest) {
+                alert('Please enter a destination');
+                return;
+            }
+
+            const personalResults = document.getElementById('personalResults');
+            personalResults.innerHTML = '<div class="loader"><div class="spinner"></div><p>Finding personalized recommendations...</p></div>';
+
+            try {
+                const destCoords = await geocodeLocation(dest);
+
+                const response = await fetch(`${API_BASE}/parking/user/personalized-parking`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentUserId,
+                        destination_lat: destCoords.lat,
+                        destination_lon: destCoords.lon,
+                        radius_km: 2.0
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to get recommendations');
+                }
+
+                const data = await response.json();
+                
+                if (!data.personalized_parking || data.personalized_parking.length === 0) {
+                    personalResults.innerHTML = '<div style="padding:20px;text-align:center;color:#6b7280;">No parking recommendations found. Try recording some trips first!</div>';
+                    return;
+                }
+
+                let html = '<div style="background:#fef3c7;padding:20px;border-radius:10px;margin-bottom:15px;">';
+                html += '<h4 style="color:#92400e;margin-bottom:10px;">✨ Personalized for You</h4>';
+                html += '<div style="color:#78350f;">Based on your preferences and history</div></div>';
+
+                data.personalized_parking.forEach((parking, index) => {
+                    const isFavorite = parking.personalization_score > 70;
+                    html += `
+                        <div class="parking-card ${isFavorite ? 'best' : ''}" style="margin-bottom:15px;">
+                            ${isFavorite ? '<div style="color:#f59e0b;font-weight:bold;margin-bottom:10px;">⭐ PERSONALIZED FOR YOU</div>' : ''}
+                            <div class="parking-header">
+                                <div>
+                                    <div class="parking-name">${parking.name}</div>
+                                    <div style="color:#10b981;font-size:0.9em;margin-top:5px;">
+                                        ${parking.personalization_reasons.join(' • ')}
+                                    </div>
+                                </div>
+                                <span class="availability-badge ${parking.availability}">${parking.availability}</span>
+                            </div>
+                            <div class="parking-details">
+                                <div class="detail-item">📍 ${parking.distance_km} km away</div>
+                                <div class="detail-item">💰 ₹${parking.hourly_rate}/hour</div>
+                                <div class="detail-item">✨ ${parking.personalization_score}/100 match</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                personalResults.innerHTML = html;
+
+            } catch (error) {
+                personalResults.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function geocodeLocation(location) {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location + ', Mumbai, India')}&limit=1`;
+            const response = await fetch(url, { headers: { 'User-Agent': 'DeepGuardians Parking App' } });
+            const data = await response.json();
+            if (data.length === 0) throw new Error('Location not found');
+            return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+        }
+
+        // Auto-load example on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                findParking(18.9220, 72.8347, 'Gateway of India');
+            }, 500);
+        });
+    </script>
+</body>
+</html>

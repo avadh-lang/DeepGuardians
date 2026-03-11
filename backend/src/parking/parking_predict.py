@@ -7,6 +7,13 @@ import joblib
 from tensorflow.keras.models import load_model
 from datetime import datetime, timedelta
 import pandas as pd
+import os
+
+
+# Get the base directory (backend folder)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+MODELS_DIR = os.path.join(BASE_DIR, "models")
+DATASET_DIR = os.path.join(BASE_DIR, "dataset")
 
 
 class ParkingPredictor:
@@ -30,20 +37,26 @@ class ParkingPredictor:
         try:
             # Load LSTM model (optional for now)
             try:
-                self.lstm_model = load_model("../../models/parking_lstm_model.h5")
+                lstm_path = os.path.join(MODELS_DIR, "parking_lstm_model.h5")
+                self.lstm_model = load_model(lstm_path)
                 print("✓ LSTM model loaded")
             except:
                 print("⚠️ LSTM model not available (using RF only)")
                 self.lstm_model = None
             
             # Load Random Forest model
-            self.rf_model = joblib.load("../../models/parking_rf_model.pkl")
+            rf_path = os.path.join(MODELS_DIR, "parking_rf_model.pkl")
+            self.rf_model = joblib.load(rf_path)
             print("✓ Random Forest model loaded")
             
             # Load preprocessing objects
-            self.scaler = joblib.load("../../models/parking_rf_scaler.pkl")
-            self.encoder = joblib.load("../../models/parking_encoder.pkl")
-            self.feature_cols = joblib.load("../../models/parking_feature_cols.pkl")
+            scaler_path = os.path.join(MODELS_DIR, "parking_rf_scaler.pkl")
+            encoder_path = os.path.join(MODELS_DIR, "parking_encoder.pkl")
+            features_path = os.path.join(MODELS_DIR, "parking_feature_cols.pkl")
+            
+            self.scaler = joblib.load(scaler_path)
+            self.encoder = joblib.load(encoder_path)
+            self.feature_cols = joblib.load(features_path)
             print("✓ Preprocessing objects loaded")
             
         except Exception as e:
@@ -53,7 +66,8 @@ class ParkingPredictor:
     def load_parking_locations(self):
         """Load parking location data"""
         # Load from dataset to get location information
-        df = pd.read_csv("../../dataset/parking_dataset.csv")
+        dataset_path = os.path.join(DATASET_DIR, "parking_dataset.csv")
+        df = pd.read_csv(dataset_path)
         
         # Get unique parking locations with their details
         self.parking_locations = df.groupby('parking_id').agg({

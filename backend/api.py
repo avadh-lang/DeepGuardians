@@ -10,8 +10,11 @@ API Documentation:
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from src.live_congestion_predictor import predict_congestion_live, reset_buffer
+import os
 
 # Import parking router
 try:
@@ -27,6 +30,10 @@ app = FastAPI(
     description="Real-time LSTM-based traffic congestion and parking availability predictor",
     version="2.0.0"
 )
+
+# Mount static files
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include parking router if available
 if parking_available:
@@ -65,12 +72,21 @@ class TrafficInput(BaseModel):
 def home():
     """Home endpoint with API information."""
     return {
-        "message": "Traffic Congestion Prediction API Running",
-        "version": "1.0.0",
+        "message": "DeepGuardians - Traffic & Parking Prediction API",
+        "version": "2.0.0",
         "docs": "http://127.0.0.1:8000/docs",
-        "predict_endpoint": "POST /predict",
-        "reset_endpoint": "POST /reset"
+        "parking_demo": "http://127.0.0.1:8000/parking-demo",
+        "endpoints": {
+            "traffic": "POST /predict",
+            "parking": "POST /parking/nearby, /parking/predict, /parking/route-with-parking"
+        }
     }
+
+
+@app.get("/parking-demo")
+def parking_demo():
+    """Serve the parking prediction demo page"""
+    return FileResponse("static/parking.html")
 
 
 @app.post("/predict")
