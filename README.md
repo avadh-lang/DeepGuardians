@@ -1,5 +1,5 @@
 DeepGuardians – AI-Driven Traffic Congestion Prediction and Mobility Optimization System
-
+IT is a Pre-Trained model.
 DeepGuardians is an intelligent transportation system designed to predict traffic congestion patterns and improve urban mobility using machine learning and optimization techniques.
 
 The system uses a Long Short-Term Memory (LSTM) neural network to analyze temporal traffic patterns and predict congestion levels. These predictions are then used by optimization modules such as Travelling Salesman Problem (TSP) based routing, parking intelligence, and departure time recommendations to support efficient travel decisions.
