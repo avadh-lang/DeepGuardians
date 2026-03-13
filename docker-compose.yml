@@ -21,13 +21,16 @@ services:
       - db
     environment:
       DATABASE_URL: postgresql://myuser:mypassword@db:5432/mydatabase
+      GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY}
     ports:
       - "8000:8000"
 
   frontend:
     build:
       context: ./client
-      dockerfile: Dockerfile  # Ensure it's pointing to the correct Dockerfile
+      dockerfile: Dockerfile
+      args:
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY}
     container_name: react_frontend
     depends_on:
       - backend

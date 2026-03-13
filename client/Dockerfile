@@ -4,6 +4,9 @@ FROM node:18 AS build
 # Set the working directory
 WORKDIR /app
 
+ARG VITE_GOOGLE_MAPS_API_KEY
+ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
+
 # Copy the package.json and package-lock.json (if available) to install dependencies
 COPY package.json package-lock.json ./
 
