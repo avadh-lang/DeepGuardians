@@ -8,12 +8,12 @@ from tensorflow.keras.models import load_model
 from datetime import datetime, timedelta
 import pandas as pd
 import os
-
+from src.parking.database import SessionLocal
+from src.parking.models import ParkingLocation
 
 # Get the base directory (backend folder)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MODELS_DIR = os.path.join(BASE_DIR, "models")
-DATASET_DIR = os.path.join(BASE_DIR, "dataset")
 
 
 class ParkingPredictor:
@@ -64,22 +64,25 @@ class ParkingPredictor:
             raise
     
     def load_parking_locations(self):
-        """Load parking location data"""
-        # Load from dataset to get location information
-        dataset_path = os.path.join(DATASET_DIR, "parking_dataset.csv")
-        df = pd.read_csv(dataset_path)
-        
-        # Get unique parking locations with their details
-        self.parking_locations = df.groupby('parking_id').agg({
-            'parking_name': 'first',
-            'latitude': 'first',
-            'longitude': 'first',
-            'capacity': 'first',
-            'location_type': 'first',
-            'hourly_rate': 'first'
-        }).to_dict('index')
-        
-        print(f"✓ Loaded {len(self.parking_locations)} parking locations")
+        """Load parking location data from database"""
+        db = SessionLocal()
+        try:
+            locations = db.query(ParkingLocation).all()
+            self.parking_locations = {}
+            for loc in locations:
+                self.parking_locations[loc.id] = {
+                    'parking_name': loc.name,
+                    'latitude': loc.latitude,
+                    'longitude': loc.longitude,
+                    'capacity': loc.capacity,
+                    'location_type': loc.location_type,
+                    'hourly_rate': loc.hourly_rate
+                }
+            print(f"✓ Loaded {len(self.parking_locations)} parking locations from DB")
+        except Exception as e:
+            print(f"Error loading from DB: {e}")
+        finally:
+            db.close()
     
     def prepare_features(self, hour, day_of_week, is_weekend, is_peak_hour, 
                         capacity, hourly_rate, location_type, weather, month):
