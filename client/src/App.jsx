@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { DirectionsRenderer, GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { DirectionsRenderer, GoogleMap, Marker, Polyline, useJsApiLoader } from "@react-google-maps/api";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
@@ -30,33 +30,35 @@ function RouteMap({ analysis }) {
   const mapRef = useRef(null);
   const [directions, setDirections] = useState(null);
   const [routeError, setRouteError] = useState("");
+  const [routeReady, setRouteReady] = useState(false);
+
+  const fallbackPath = useMemo(() => {
+    if (!analysis) return [];
+    return [
+      { lat: analysis.trip.origin.lat, lng: analysis.trip.origin.lng },
+      { lat: analysis.trip.destination.lat, lng: analysis.trip.destination.lng },
+    ];
+  }, [analysis]);
 
   useEffect(() => {
     if (!analysis || !window.google?.maps) return;
 
     setRouteError("");
     setDirections(null);
+    setRouteReady(false);
 
     const service = new window.google.maps.DirectionsService();
     service.route(
       {
-        origin: {
-          lat: analysis.trip.origin.lat,
-          lng: analysis.trip.origin.lng,
-        },
-        destination: {
-          lat: analysis.trip.destination.lat,
-          lng: analysis.trip.destination.lng,
-        },
+        origin: analysis.trip.origin.label,
+        destination: analysis.trip.destination.label,
         travelMode: window.google.maps.TravelMode.DRIVING,
-        drivingOptions: {
-          departureTime: new Date(analysis.trip.departure_time),
-          trafficModel: window.google.maps.TrafficModel.BEST_GUESS,
-        },
+        provideRouteAlternatives: false,
       },
       (result, status) => {
         if (status === "OK" && result) {
           setDirections(result);
+          setRouteReady(true);
           return;
         }
 
@@ -64,6 +66,14 @@ function RouteMap({ analysis }) {
       }
     );
   }, [analysis]);
+
+  useEffect(() => {
+    if (!mapRef.current || !window.google?.maps || fallbackPath.length !== 2) return;
+
+    const bounds = new window.google.maps.LatLngBounds();
+    fallbackPath.forEach((point) => bounds.extend(point));
+    mapRef.current.fitBounds(bounds, 80);
+  }, [fallbackPath, directions]);
 
   const iframeDirectionsUrl = analysis
     ? `https://www.google.com/maps/embed/v1/directions?key=${encodeURIComponent(
@@ -115,6 +125,28 @@ function RouteMap({ analysis }) {
                   }}
                 />
               ) : null}
+              {!routeReady && fallbackPath.length === 2 ? (
+                <Polyline
+                  path={fallbackPath}
+                  options={{
+                    strokeColor: "#79b8ff",
+                    strokeOpacity: 0.85,
+                    strokeWeight: 4,
+                    icons: [
+                      {
+                        icon: {
+                          path: "M 0,-1 0,1",
+                          strokeOpacity: 1,
+                          strokeColor: "#79b8ff",
+                          scale: 4,
+                        },
+                        offset: "0",
+                        repeat: "18px",
+                      },
+                    ],
+                  }}
+                />
+              ) : null}
             </>
           ) : null}
         </GoogleMap>
@@ -128,7 +160,7 @@ function RouteMap({ analysis }) {
         />
       )}
       <p className="map-caption">
-        Google Maps now computes the actual driving route between your From and To locations and falls back to an embedded directions view if the SDK route layer fails.
+        The route view now always connects your From and To points: first with Google driving directions, and if that fails, with a direct traced line between the two locations.
       </p>
       {routeError ? <p className="error-copy route-error-copy">{routeError}</p> : null}
     </>
